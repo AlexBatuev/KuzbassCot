@@ -6,21 +6,27 @@
 #include "GameFramework/Actor.h"
 #include "TargetTrack.generated.h"
 
+class USplineComponent;
+class ATarget;
+
 UCLASS()
 class KUZBASSCOT_API ATargetTrack : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ATargetTrack();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Component")
+	USplineComponent* SplineComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default")
+	TSubclassOf<ATarget> Actor;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Default")
+	int32 Count;
+
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
+	
 };

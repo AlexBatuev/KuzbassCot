@@ -3,25 +3,46 @@
 
 #include "TargetTrack.h"
 
-// Sets default values
+#include "Target.h"
+#include "Components/SplineComponent.h"
+
 ATargetTrack::ATargetTrack()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	SplineComponent = CreateDefaultSubobject<USplineComponent>("Spline");
+	SplineComponent->SetupAttachment(GetRootComponent());
 }
 
-// Called when the game starts or when spawned
 void ATargetTrack::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (!SplineComponent)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red,
+			FString("Spline component in null!"));
+		return;
+	}
+
+	TArray<ATarget*> Targets;
+	for (size_t i = 0; i < Count; i++)
+	{
+		const auto Time = (i + 1.f) / Count;
+		auto Location = SplineComponent->GetLocationAtTime(Time, ESplineCoordinateSpace::World);
+		const auto Target = GetWorld()->SpawnActor<ATarget>(Actor, FTransform(Location));
+		Target->FinishSpawning(FTransform(Location));
+		Targets.Add(Target);
+	}
+
+	ATarget* PreviousTarget = nullptr;
+	for (const auto Target : Targets)
+	{
+		if (PreviousTarget)
+		{
+			Target->SetPreviousTarget(PreviousTarget);
+			PreviousTarget->SetNextTarget(Target);
+		}
+		PreviousTarget = Target;
+	}
 }
-
-// Called every frame
-void ATargetTrack::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-

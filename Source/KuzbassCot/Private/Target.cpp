@@ -13,16 +13,16 @@ ATarget::ATarget()
 	SetRootComponent(ActorRootComponent);
 	
 	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	MeshComponent->SetupAttachment(GetRootComponent());
 	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	MeshComponent->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
-	MeshComponent->SetupAttachment(GetRootComponent());
 	
 	CollisionComponent = CreateDefaultSubobject<UBoxComponent>("Collision");
+	CollisionComponent->SetupAttachment(GetRootComponent());
 	CollisionComponent->SetBoxExtent(FVector(50));
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
-	CollisionComponent->SetupAttachment(GetRootComponent());
 
 	CollisionComponent->OnComponentHit.AddDynamic(this, &ATarget::OnHit);
 }

@@ -24,6 +24,9 @@ class KUZBASSCOT_API ATarget : public AActor
 public:	
 	ATarget();
 
+	void SetPreviousTarget(ATarget* Target) { PreviousTarget = Target; }
+	void SetNextTarget(ATarget* Target) { NextTarget = Target; }
+
 protected:
 	UPROPERTY()
 	USceneComponent* ActorRootComponent;
@@ -43,7 +46,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
 	FTimerHandle TimerHandle;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation", meta = (ClampMin = 0.000001))
 	float ActiveTime;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
