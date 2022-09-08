@@ -6,21 +6,61 @@
 #include "GameFramework/Actor.h"
 #include "Target.generated.h"
 
+class UBoxComponent;
+
+UENUM()
+enum class EActivationDirection
+{
+	Both = 0,
+	Forward,
+	Backward
+};
+
 UCLASS()
 class KUZBASSCOT_API ATarget : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ATarget();
 
 protected:
-	// Called when the game starts or when spawned
+	UPROPERTY()
+	USceneComponent* ActorRootComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Component")
+	UStaticMeshComponent* MeshComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Component")
+	UBoxComponent* CollisionComponent;
+		
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	UMaterialInstance* DefaultMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	UMaterialInstance* ActiveMaterial;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	FTimerHandle TimerHandle;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	float ActiveTime;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	ATarget* PreviousTarget;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Activation")
+	ATarget* NextTarget;
+	
 	virtual void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
+	EActivationDirection ActivationDirection;
+	
+	void Activate(EActivationDirection IncomeDirection);
+	void Deactivate();
 
+	UFUNCTION()
+	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+		FVector NormalImpulse, const FHitResult& Hit);
 };

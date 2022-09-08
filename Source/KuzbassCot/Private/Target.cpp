@@ -3,25 +3,81 @@
 
 #include "Target.h"
 
-// Sets default values
+#include "Components/BoxComponent.h"
+
 ATarget::ATarget()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	ActorRootComponent = CreateDefaultSubobject<USceneComponent>("RootComponent");
+	SetRootComponent(ActorRootComponent);
+	
+	MeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
+	MeshComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	MeshComponent->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	MeshComponent->SetupAttachment(GetRootComponent());
+	
+	CollisionComponent = CreateDefaultSubobject<UBoxComponent>("Collision");
+	CollisionComponent->SetBoxExtent(FVector(50));
+	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
+	CollisionComponent->SetNotifyRigidBodyCollision(true);
+	CollisionComponent->SetupAttachment(GetRootComponent());
+
+	CollisionComponent->OnComponentHit.AddDynamic(this, &ATarget::OnHit);
 }
 
-// Called when the game starts or when spawned
 void ATarget::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	MeshComponent->SetMaterial(0, DefaultMaterial);
 }
 
-// Called every frame
-void ATarget::Tick(float DeltaTime)
+void ATarget::Activate(const EActivationDirection IncomeDirection)
 {
-	Super::Tick(DeltaTime);
-
+	ActivationDirection = IncomeDirection;
+	if (TimerHandle.IsValid())
+	{
+		TimerHandle.Invalidate();
+	}
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &ATarget::Deactivate, ActiveTime);
+	MeshComponent->SetMaterial(0, ActiveMaterial);
 }
 
+void ATarget::Deactivate()
+{
+	TimerHandle.Invalidate();
+	MeshComponent->SetMaterial(0, DefaultMaterial);
+
+	switch(ActivationDirection)
+	{
+	case EActivationDirection::Both:
+		if (NextTarget)
+		{
+			NextTarget->Activate(EActivationDirection::Forward);
+		}
+		if (PreviousTarget)
+		{
+			PreviousTarget->Activate(EActivationDirection::Backward);
+		}
+		break;
+	case EActivationDirection::Forward:
+		if (NextTarget)
+		{
+			NextTarget->Activate(EActivationDirection::Forward);
+		}
+		break;
+	case EActivationDirection::Backward:
+		if (PreviousTarget)
+		{
+			PreviousTarget->Activate(EActivationDirection::Backward);
+		}
+		break;
+	}
+}
+
+void ATarget::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	Activate(EActivationDirection::Both);
+}
